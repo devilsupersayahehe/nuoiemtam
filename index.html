@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuôi Em Tâm - Gieo Mầm Yêu Thương</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Merriweather', 'serif'],
+            },
+            colors: {
+              brand: {
+                orange: '#FF8A4C',
+                green: '#4CAF50',
+                blue: '#2196F3',
+                dark: '#1F2937',
+                light: '#F9FAFB'
+              }
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+              'scale-in': 'scaleIn 0.3s ease-out forwards',
+              'fade-in': 'fadeIn 0.3s ease-out forwards',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' }
+              },
+              scaleIn: {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' }
+              },
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+      
+      /* Tùy chỉnh thanh cuộn cao cấp cho Modal - Khắc phục lỗi lòi ra khỏi góc bo tròn */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 138, 76, 0.4);
+      }
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+      }
+
+      /* Fix lòi thanh cuộn ở góc bo tròn của modal */
+      .modal-content-container {
+        border-radius: inherit;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      /* Hiệu ứng kính cho các card đặc biệt */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+    
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.460.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+  </head>
+  <body class="bg-gray-50 text-gray-800 antialiased selection:bg-orange-100 selection:text-brand-orange">
+    <div id="root"></div>
+
+    <script type="module">
+      import React, { useState, useEffect } from 'react';
+      import ReactDOM from 'react-dom/client';
+      import { 
+        Heart, Menu, X, ArrowRight, Info, Users, Utensils, 
+        School, TrendingUp, Wallet, ZoomIn, Download, Copy, 
+        CheckCircle, ShieldCheck, Zap, HeartHandshake, CreditCard, 
+        Landmark, MapPin, Calendar, Target, BookOpen, Mail, Phone, 
+        Facebook, Instagram 
+      } from 'lucide-react';
+
+      // --- CONSTANTS ---
+      const APP_NAME = "Nuôi Em Tâm";
+      const DONATION_QR_URL = "https://acchanoi.vn/wp-content/uploads/2025/12/z7335470603839_ca58483ab295a61a094ccbf623035e9e.jpg";
+
+      const NAV_ITEMS = [
+        { label: 'Trang Chủ', id: 'home' },
+        { label: 'Sứ Mệnh', id: 'mission' },
+        { label: 'Hoạt Động', id: 'activities' },
+        { label: 'Ủng Hộ', id: 'donate' },
+      ];
+
+      const STATS = [
+        { value: '1', label: 'Em nhỏ cần giúp', icon: React.createElement(Users, { size: 24 }) },
+        { value: '3', label: 'Bữa ăn mỗi ngày', icon: React.createElement(Utensils, { size: 24 }) },
+        { value: '365', label: 'Ngày đến trường', icon: React.createElement(School, { size: 24 }) },
+        { value: '100%', label: 'Minh bạch', icon: React.createElement(Heart, { size: 24 }) },
+      ];
+
+      const IMPACT_STEPS = [
+        {
+          title: '10.000đ / Ngày',
+          description: 'Số tiền nhỏ mỗi ngày sẽ giúp duy trì cuộc sống và việc học tập cho em Tâm.',
+          icon: React.createElement('div', { className: "text-2xl font-black" }, "10K")
+        },
+        {
+          title: 'Bữa Ăn Cho Em Tâm',
+          description: 'Đảm bảo em Tâm có những bữa cơm có thịt, đủ dinh dưỡng để phát triển khỏe mạnh.',
+          icon: React.createElement(Utensils, { size: 32 })
+        },
+        {
+          title: 'Giúp Em Tâm Đến Trường',
+          description: 'Tiếp bước cho em Tâm được đi học đều đặn, không phải bỏ học vì hoàn cảnh khó khăn.',
+          icon: React.createElement(School, { size: 32 })
+        }
+      ];
+
+      // --- COMPONENTS ---
+
+      const Navbar = ({ onNavClick }) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [scrolled, setScrolled] = useState(false);
+
+        useEffect(() => {
+          const handleScroll = () => setScrolled(window.scrollY > 50);
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, []);
+
+        const handleItemClick = (id) => {
+          setIsOpen(false);
+          if (id === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
+          else onNavClick(id);
+        };
+
+        return React.createElement('nav', { 
+          className: `fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-4'}`
+        }, 
+          React.createElement('div', { className: "container mx-auto px-4 md:px-6 flex justify-between items-center" }, 
+            React.createElement('button', { onClick: () => handleItemClick('home'), className: "flex items-center gap-2 group" }, 
+              React.createElement('div', { className: "bg-brand-orange p-2 rounded-full text-white group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/20" }, 
+                React.createElement(Heart, { fill: "white", size: 20 })
+              ),
+              React.createElement('span', { className: `text-xl font-black tracking-tight ${scrolled ? 'text-gray-900' : 'text-white'}` }, APP_NAME)
+            ),
+            React.createElement('div', { className: "hidden md:flex items-center gap-8" }, 
+              NAV_ITEMS.map((item) => (
+                React.createElement('button', { 
+                  key: item.id, 
+                  onClick: () => handleItemClick(item.id), 
+                  className: `text-sm font-bold hover:text-brand-orange transition-colors ${scrolled ? 'text-gray-600' : 'text-gray-100'}`
+                }, item.label)
+              )),
+              React.createElement('button', { 
+                onClick: () => onNavClick('donate'), 
+                className: "bg-brand-orange hover:bg-orange-600 text-white px-7 py-3 rounded-full text-sm font-black shadow-xl shadow-orange-500/30 transition-all hover:-translate-y-1 active:scale-95"
+              }, "Đóng Góp Ngay")
+            ),
+            React.createElement('button', { 
+              className: `md:hidden p-2 ${scrolled ? 'text-gray-900' : 'text-white'}`, 
+              onClick: () => setIsOpen(!isOpen) 
+            }, isOpen ? React.createElement(X) : React.createElement(Menu))
+          ),
+          isOpen && React.createElement('div', { className: "md:hidden absolute top-full left-0 w-full bg-white border-t shadow-2xl p-6 flex flex-col gap-5 animate-fade-in" }, 
+            NAV_ITEMS.map((item) => (
+              React.createElement('button', { 
+                key: item.id, 
+                onClick: () => handleItemClick(item.id), 
+                className: "text-left text-gray-700 font-bold py-2 px-4 hover:bg-orange-50 rounded-xl"
+              }, item.label)
+            )),
+            React.createElement('button', { 
+              onClick: () => onNavClick('donate'), 
+              className: "bg-brand-orange text-white text-center py-4 rounded-xl font-black shadow-lg shadow-orange-500/20"
+            }, "Đóng Góp Ngay")
+          )
+        );
+      };
+
+      const Hero = ({ onOpenDetails, onDonateClick }) => React.createElement('section', { 
+        id: "home", 
+        className: "relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
+      }, 
+        React.createElement('div', { className: "absolute inset-0 z-0" }, 
+          React.createElement('img', { 
+            src: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?q=80&w=2070&auto=format&fit=crop", 
+            alt: "Hero", 
+            className: "w-full h-full object-cover" 
+          }),
+          React.createElement('div', { className: "absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-gray-900/20" })
+        ),
+        React.createElement('div', { className: "relative z-10 container mx-auto px-4 text-center text-white" }, 
+          React.createElement('div', { className: "inline-block bg-brand-orange/20 backdrop-blur-md border border-brand-orange/50 rounded-full px-5 py-2 mb-8 animate-pulse-slow" }, 
+            React.createElement('span', { className: "text-brand-orange font-black text-xs tracking-widest uppercase" }, "Dự án thiện nguyện")
+          ),
+          React.createElement('h1', { className: "text-5xl md:text-7xl lg:text-8xl font-black font-serif mb-8 leading-tight drop-shadow-2xl" }, 
+            "Nuôi Em Tâm ", React.createElement('br'), 
+            React.createElement('span', { className: "text-brand-orange" }, "Gieo Mầm Yêu Thương")
+          ),
+          React.createElement('p', { className: "text-xl md:text-2xl text-gray-100 max-w-2xl mx-auto mb-12 leading-relaxed font-light" }, 
+            "Chỉ với ", React.createElement('strong', { className: "text-white font-black" }, "10.000đ/ngày"), 
+            ", bạn đã giúp em Tâm có bữa ăn đầy đủ dinh dưỡng, vững bước đến trường."
+          ),
+          React.createElement('div', { className: "flex flex-col sm:flex-row items-center justify-center gap-5" }, 
+            React.createElement('button', { 
+              onClick: onDonateClick, 
+              className: "w-full sm:w-auto px-10 py-5 bg-brand-orange hover:bg-orange-600 text-white rounded-full font-black text-xl transition-all shadow-[0_20px_40px_-10px_rgba(255,138,76,0.4)] flex items-center justify-center gap-3 group active:scale-95"
+            }, "Tham Gia Ngay", React.createElement(ArrowRight, { className: "group-hover:translate-x-2 transition-transform" })),
+            React.createElement('button', { 
+              onClick: onOpenDetails, 
+              className: "w-full sm:w-auto px-10 py-5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full font-black text-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+            }, "Tìm Hiểu Thêm", React.createElement(Info, { size: 24 }))
+          )
+        ),
+        React.createElement('div', { className: "absolute bottom-0 left-0 w-full overflow-hidden leading-none" }, 
+          React.createElement('svg', { className: "relative block w-[calc(100%+1.3px)] h-[60px] md:h-[120px]", viewBox: "0 0 1200 120", preserveAspectRatio: "none" }, 
+            React.createElement('path', { 
+              d: "M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z", 
+              className: "fill-white md:fill-gray-50" 
+            })
+          )
+        )
+      );
+
+      const LiveCounter = () => {
+        const [participants, setParticipants] = useState(1685);
+        useEffect(() => {
+          const interval = setInterval(() => setParticipants(p => p < 1742 ? p + 1 : p), 5000);
+          return () => clearInterval(interval);
+        }, []);
+        return React.createElement('div', { className: "bg-white border-y border-gray-100 py-10" }, 
+          React.createElement('div', { className: "container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8" }, 
+            [
+              { icon: React.createElement(Users, { size: 28 }), label: "Người tham gia", value: participants.toLocaleString(), color: "bg-orange-50/70 border-orange-100 text-brand-orange", sub: "+ Trực tiếp" },
+              { icon: React.createElement(Wallet, { size: 28 }), label: "Tổng ngân quỹ", value: `${(participants * 10000).toLocaleString()}đ`, color: "bg-green-50/70 border-green-100 text-brand-green", sub: "" },
+              { icon: React.createElement(TrendingUp, { size: 28 }), label: "Tăng trưởng", value: "100%", color: "bg-blue-50/70 border-blue-100 text-brand-blue", sub: "Minh bạch" }
+            ].map((item, idx) => (
+              React.createElement('div', { key: idx, className: `flex items-center justify-center md:justify-start gap-6 p-8 rounded-[32px] border ${item.color} transition-all hover:scale-[1.02]` }, 
+                React.createElement('div', { className: "bg-white p-4 rounded-2xl shadow-sm text-gray-800" }, item.icon),
+                React.createElement('div', null, 
+                  React.createElement('p', { className: "text-xs text-gray-500 uppercase font-black tracking-widest mb-1" }, item.label),
+                  React.createElement('div', { className: "flex items-baseline gap-2" }, 
+                    React.createElement('span', { className: "text-4xl font-black text-gray-900" }, item.value),
+                    item.sub && React.createElement('span', { className: "text-[10px] font-black animate-pulse" }, item.sub)
+                  )
+                )
+              )
+            ))
+          )
+        );
+      };
+
+      const ProjectDetailModal = ({ isOpen, onClose, section }) => {
+        if (!isOpen) return null;
+        const content = {
+          mission: { 
+            title: "Câu Chuyện Về Tâm", 
+            img: "https://images.unsplash.com/photo-1509099836639-18ba1795216d?q=80&w=1200", 
+            body: "Tâm sinh ra trong một gia đình khó khăn, nơi cơm ăn là ước mơ xa xỉ. 10.000đ của bạn giúp em có bữa cơm có thịt, đủ sức khỏe để bước tiếp hành trình 5km đến trường mỗi ngày." 
+          },
+          activities: { 
+            title: "Hành Trình Gieo Mầm", 
+            img: "https://images.unsplash.com/photo-1595561579181-263fe6175b73?q=80&w=1170", 
+            body: "Lộ trình dự án bao gồm Bếp Ăn Yêu Thương, Gieo Chữ Lên Nương và khám sức khỏe định kỳ. Chúng tôi đã hỗ trợ hơn 12 điểm trường với mục tiêu 10.000+ bữa ăn mỗi năm." 
+          },
+          donate: { 
+            title: "Thông Tin Ủng Hộ", 
+            img: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1200", 
+            body: "Sử dụng mã VietQR để hệ thống AI tự động ghi nhận. Cam kết sao kê minh bạch hàng tháng và cập nhật hình ảnh bữa ăn trực tiếp từ điểm trường." 
+          }
+        }[section] || content.mission;
+
+        return React.createElement('div', { className: "fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4" }, 
+          React.createElement('div', { className: "absolute inset-0 bg-black/90 backdrop-blur-md animate-fade-in", onClick: onClose }),
+          React.createElement('div', { className: "relative bg-white rounded-[40px] sm:rounded-[56px] w-full max-w-4xl h-[90vh] shadow-2xl animate-scale-in overflow-hidden border border-white/20" }, 
+            React.createElement('button', { 
+              onClick: onClose, 
+              className: "absolute top-6 right-8 bg-white/95 text-gray-900 p-3 rounded-full z-[70] shadow-2xl border border-gray-100 active:scale-90 hover:bg-orange-50 transition-colors" 
+            }, React.createElement(X, { size: 24 })),
+            React.createElement('div', { className: "modal-content-container" }, 
+              React.createElement('div', { className: "flex-grow overflow-y-auto custom-scrollbar pt-0" }, 
+                React.createElement('div', { className: "relative w-full h-64 sm:h-96 flex-shrink-0" }, 
+                  React.createElement('img', { src: content.img, className: "w-full h-full object-cover", alt: "Detail" }),
+                  React.createElement('div', { className: "absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/10" }),
+                  React.createElement('div', { className: "absolute bottom-8 left-8 sm:left-14 pr-12" }, 
+                    React.createElement('h2', { className: "text-3xl sm:text-5xl font-black text-gray-900 font-serif mb-2" }, content.title),
+                    React.createElement('div', { className: "flex items-center gap-2 text-brand-orange font-black text-xs uppercase tracking-[0.2em]" }, 
+                      React.createElement(Heart, { size: 16, fill: "currentColor" }), "Vì tương lai trẻ em vùng cao"
+                    )
+                  )
+                ),
+                React.createElement('div', { className: "p-8 sm:p-16 pt-10 text-gray-700 leading-relaxed max-w-3xl mx-auto" }, 
+                  React.createElement('div', { className: "flex gap-4 text-xs font-black uppercase text-gray-400 mb-10" }, 
+                    React.createElement('span', { className: "bg-gray-100 px-5 py-2 rounded-full flex items-center gap-2" }, React.createElement(MapPin, { size: 16 }), "Vùng Cao Tây Bắc"),
+                    React.createElement('span', { className: "bg-gray-100 px-5 py-2 rounded-full flex items-center gap-2" }, React.createElement(Calendar, { size: 16 }), "Dự án 2024 - 2025")
+                  ),
+                  React.createElement('p', { className: "text-xl mb-10 text-gray-600 font-light italic leading-loose" }, content.body),
+                  React.createElement('div', { className: "bg-orange-50 border-l-[6px] border-brand-orange p-8 rounded-r-3xl italic text-gray-700 mb-12 shadow-sm text-lg" }, 
+                    "\"Một nắm khi đói bằng một gói khi no. 10.000đ của bạn là phép màu có thật đối với cuộc đời của một đứa trẻ.\""
+                  ),
+                  section === 'donate' && React.createElement('div', { className: "bg-gray-50 p-8 rounded-[32px] border border-gray-200" }, 
+                    React.createElement('h4', { className: "font-black mb-6 flex items-center gap-3 text-lg" }, React.createElement(Landmark, { size: 24, className: "text-brand-orange" }), "Chuyển khoản trực tiếp"),
+                    React.createElement('div', { className: "space-y-4 text-base" }, 
+                      React.createElement('div', { className: "flex justify-between border-b border-gray-200 pb-3" }, React.createElement('span', { className: "text-gray-400 font-bold uppercase text-[10px] tracking-widest" }, "Số tài khoản"), React.createElement('span', { className: "font-black text-xl tracking-wider font-mono" }, "1234567890")),
+                      React.createElement('div', { className: "flex justify-between border-b border-gray-200 pb-3" }, React.createElement('span', { className: "text-gray-400 font-bold uppercase text-[10px] tracking-widest" }, "Chủ tài khoản"), React.createElement('span', { className: "font-black uppercase" }, "DỰ ÁN NUÔI EM TÂM")),
+                      React.createElement('div', { className: "flex justify-between border-b border-gray-200 pb-3" }, React.createElement('span', { className: "text-gray-400 font-bold uppercase text-[10px] tracking-widest" }, "Ngân hàng"), React.createElement('span', { className: "font-black" }, "MB BANK"))
+                    ),
+                    React.createElement('p', { className: "mt-6 text-center text-xs text-orange-800 font-bold bg-orange-100/50 py-3 rounded-xl" }, "Nội dung: HoTen_SDT_NuoiEmTam")
+                  ),
+                  React.createElement('div', { className: "h-24" })
+                )
+              ),
+              React.createElement('div', { className: "p-6 sm:p-10 bg-gray-50/95 backdrop-blur-md border-t flex flex-col sm:flex-row gap-5 items-center justify-between shadow-2xl" }, 
+                React.createElement('div', { className: "hidden sm:flex items-center gap-4" }, 
+                  React.createElement('div', { className: "w-12 h-12 rounded-2xl bg-brand-orange/10 flex items-center justify-center text-brand-orange shadow-inner" }, React.createElement(Target, { size: 24 })),
+                  React.createElement('div', null, 
+                    React.createElement('p', { className: "text-[10px] font-black text-gray-400 uppercase leading-none tracking-[0.2em] mb-1" }, "Tình trạng"),
+                    React.createElement('p', { className: "text-sm font-black text-gray-900" }, "Đang tích cực triển khai")
+                  )
+                ),
+                React.createElement('div', { className: "flex items-center gap-4 w-full sm:w-auto" }, 
+                  React.createElement('button', { onClick: onClose, className: "flex-1 sm:flex-none px-8 py-4 text-gray-400 font-black hover:text-gray-900 transition-colors text-sm uppercase tracking-widest" }, "Để sau"),
+                  React.createElement('button', { 
+                    onClick: () => { onClose(); document.getElementById('donate')?.scrollIntoView({ behavior: 'smooth' }); }, 
+                    className: "flex-1 sm:flex-none group bg-brand-orange hover:bg-orange-600 text-white px-10 py-5 rounded-[20px] font-black shadow-2xl shadow-orange-500/30 transition-all flex items-center justify-center gap-3 text-base active:scale-95" 
+                  }, "Ủng Hộ Ngay", React.createElement(ArrowRight, { size: 20, className: "group-hover:translate-x-1 transition-transform" }))
+                )
+              )
+            )
+          )
+        );
+      };
+
+      const App = () => {
+        const [modal, setModal] = useState({ open: false, section: 'mission' });
+        const handleNav = (id) => {
+          if (id === 'donate') setModal({ open: true, section: 'donate' });
+          else {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }
+        };
+
+        const handleCopy = () => {
+          navigator.clipboard.writeText("1234567890 - MB BANK - DỰ ÁN NUÔI EM TÂM");
+          alert("Đã sao chép thông tin tài khoản!");
+        };
+
+        return React.createElement('div', { className: "min-h-screen flex flex-col bg-white" }, 
+          React.createElement(Navbar, { onNavClick: handleNav }),
+          React.createElement('main', { className: "flex-grow" }, 
+            React.createElement(Hero, { onOpenDetails: () => setModal({ open: true, section: 'mission' }), onDonateClick: () => setModal({ open: true, section: 'donate' }) }),
+            React.createElement(LiveCounter),
+            
+            // Mission Section
+            React.createElement('section', { id: "mission", className: "py-24 bg-gray-50" }, 
+              React.createElement('div', { className: "container mx-auto px-4" }, 
+                React.createElement('div', { className: "max-w-4xl mx-auto text-center mb-20" }, 
+                  React.createElement('h2', { className: "text-4xl md:text-5xl font-black font-serif text-gray-900 mb-8" }, "Sức Mạnh Của ", React.createElement('span', { className: "text-brand-orange" }, "10.000đ")),
+                  React.createElement('p', { className: "text-gray-600 text-xl leading-loose font-light" }, "Chỉ 10.000đ mỗi ngày có thể thay đổi cả một cuộc đời. Chúng tôi kết nối bạn trực tiếp với em nhỏ cần giúp đỡ.")
+                ),
+                React.createElement('div', { className: "grid md:grid-cols-3 gap-10 mb-24" }, 
+                  IMPACT_STEPS.map((step, i) => (
+                    React.createElement('div', { key: i, onClick: () => setModal({ open: true, section: 'mission' }), className: "bg-white p-10 rounded-[40px] shadow-xl hover:shadow-2xl transition-all cursor-pointer border border-gray-100 flex flex-col items-center text-center group transform hover:-translate-y-2" }, 
+                      React.createElement('div', { className: "w-20 h-20 bg-brand-orange/10 rounded-3xl flex items-center justify-center mb-8 text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-all duration-500 shadow-inner" }, step.icon),
+                      React.createElement('h3', { className: "text-2xl font-black text-gray-900 mb-4 group-hover:text-brand-orange transition-colors" }, step.title),
+                      React.createElement('p', { className: "text-gray-500 leading-relaxed font-medium" }, step.description)
+                    )
+                  ))
+                )
+              )
+            ),
+
+            // Activities Section
+            React.createElement('section', { id: "activities", className: "py-24 bg-white" }, 
+              React.createElement('div', { className: "container mx-auto px-4 text-center" }, 
+                React.createElement('h2', { className: "text-4xl font-black font-serif mb-6" }, "Hình Ảnh Hoạt Động"),
+                React.createElement('p', { className: "text-gray-500 mb-16 max-w-2xl mx-auto text-lg" }, "Khoảnh khắc được ghi lại trực tiếp tại các điểm trường xa xôi."),
+                React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-6" }, 
+                  React.createElement('div', { onClick: () => setModal({ open: true, section: 'activities' }), className: "row-span-2 col-span-2 relative group overflow-hidden rounded-[40px] h-[400px] md:h-[600px] cursor-pointer shadow-2xl" }, 
+                    React.createElement('img', { src: "https://images.unsplash.com/photo-1595561579181-263fe6175b73?q=80&w=1170", className: "w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" }),
+                    React.createElement('div', { className: "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent flex items-end p-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" }, 
+                      React.createElement('p', { className: "text-white text-2xl font-black flex items-center gap-3" }, React.createElement(ZoomIn, { size: 32 }), "Hành trình đến trường")
+                    )
+                  ),
+                  ["https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=687", "https://images.unsplash.com/photo-1509099836639-18ba1795216d?q=80&w=880"].map((url, i) => (
+                    React.createElement('div', { key: i, onClick: () => setModal({ open: true, section: 'activities' }), className: "col-span-1 relative group overflow-hidden rounded-[40px] h-48 md:h-auto cursor-pointer shadow-lg" }, 
+                      React.createElement('img', { src: url, className: "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" })
+                    )
+                  )),
+                  React.createElement('div', { onClick: () => setModal({ open: true, section: 'activities' }), className: "col-span-2 relative group overflow-hidden rounded-[40px] h-64 md:h-auto cursor-pointer shadow-xl" }, 
+                    React.createElement('img', { src: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?q=80&w=1331", className: "w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" }),
+                    React.createElement('div', { className: "absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white p-8" }, 
+                      React.createElement(Utensils, { className: "w-12 h-12 text-brand-orange mb-4" }),
+                      React.createElement('span', { className: "font-black text-3xl" }, "Bữa cơm đầy hy vọng")
+                    )
+                  )
+                )
+              )
+            ),
+
+            // Donate Section
+            React.createElement('section', { id: "donate", className: "py-32 bg-gray-900 relative overflow-hidden" }, 
+              React.createElement('div', { className: "absolute top-0 right-0 w-96 h-96 bg-brand-orange/20 rounded-full blur-[120px] -mr-48 -mt-48" }),
+              React.createElement('div', { className: "container mx-auto px-4 flex flex-col lg:flex-row gap-20 items-center relative z-10" }, 
+                React.createElement('div', { className: "flex-1 text-center lg:text-left text-white" }, 
+                  React.createElement('h2', { className: "text-5xl md:text-7xl font-black font-serif mb-10 leading-tight" }, "Một Chút Chia Sẻ", React.createElement('br'), "Ngàn Vạn ", React.createElement('span', { className: "text-brand-orange" }, "Niềm Tin")),
+                  React.createElement('p', { className: "text-gray-400 text-xl mb-12 leading-relaxed max-w-xl font-light" }, "Hành động của bạn hôm nay chính là tương lai của các em ngày mai. Hãy cùng Nuôi Em Tâm viết tiếp những ước mơ."),
+                  React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 gap-6" }, 
+                    [
+                      { icon: React.createElement(ShieldCheck, { className: "text-green-400" }), title: "Minh bạch 100%", desc: "Báo cáo tự động." },
+                      { icon: React.createElement(Zap, { className: "text-blue-400" }), title: "Nhanh chóng", desc: "Xác nhận tức thì." }
+                    ].map((item, i) => (
+                      React.createElement('div', { key: i, className: "flex items-start gap-4 p-6 bg-white/5 rounded-3xl border border-white/10" }, 
+                        React.createElement('div', { className: "mt-1" }, item.icon),
+                        React.createElement('div', null, React.createElement('h4', { className: "font-black text-lg" }, item.title), React.createElement('p', { className: "text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold" }, item.desc))
+                      )
+                    ))
+                  )
+                ),
+                React.createElement('div', { className: "flex-1 w-full max-w-md" }, 
+                  React.createElement('div', { className: "bg-white rounded-[48px] shadow-2xl p-10 text-center border border-gray-100 group" }, 
+                    React.createElement('div', { className: "flex justify-between items-center mb-10" }, 
+                      React.createElement('div', { className: "flex items-center gap-3 text-left" }, 
+                        React.createElement('div', { className: "bg-brand-orange/10 p-3 rounded-2xl text-brand-orange" }, React.createElement(Landmark, { size: 28 })),
+                        React.createElement('div', null, React.createElement('h3', { className: "font-black text-gray-900" }, "VietQR"), React.createElement('p', { className: "text-[10px] font-black text-gray-400 tracking-widest uppercase" }, "Scan to Pay"))
+                      ),
+                      React.createElement('img', { src: "https://vietqr.net/portal-v2/images/img/vietqr-logo-01.png", className: "h-5 opacity-80" })
+                    ),
+                    React.createElement('div', { className: "bg-gray-50 p-6 rounded-[32px] mb-10 border-2 border-dashed border-gray-200" }, 
+                      React.createElement('img', { src: DONATION_QR_URL, className: "w-full aspect-square object-contain rounded-2xl shadow-inner", alt: "QR" })
+                    ),
+                    React.createElement('div', { className: "space-y-4" }, 
+                      React.createElement('button', { 
+                        onClick: handleCopy, 
+                        className: "w-full py-5 bg-brand-orange hover:bg-orange-600 text-white rounded-[24px] font-black shadow-2xl shadow-orange-500/30 transition-all active:scale-95 flex items-center justify-center gap-3" 
+                      }, React.createElement(Copy, { size: 20 }), "Sao chép tài khoản")
+                    ),
+                    React.createElement('p', { className: "text-[10px] font-black text-gray-400 mt-6 uppercase tracking-[0.2em]" }, "Nội dung: HoTen_SDT_NuoiEmTam")
+                  )
+                )
+              )
+            )
+          ),
+          
+          // Footer
+          React.createElement('footer', { className: "bg-gray-900 text-gray-400 py-20 border-t border-gray-800" }, 
+            React.createElement('div', { className: "container mx-auto px-4" }, 
+              React.createElement('div', { className: "grid md:grid-cols-4 gap-16 mb-16" }, 
+                React.createElement('div', { className: "col-span-1 md:col-span-2" }, 
+                  React.createElement('div', { className: "flex items-center gap-2 mb-8 text-white" }, 
+                    React.createElement('div', { className: "bg-brand-orange p-2 rounded-full" }, React.createElement(Heart, { fill: "white", size: 24 })),
+                    React.createElement('span', { className: "text-3xl font-black tracking-tighter" }, APP_NAME)
+                  ),
+                  React.createElement('p', { className: "text-lg leading-relaxed max-w-sm mb-10 font-light" }, "Dự án phi lợi nhuận hướng tới việc thay đổi cuộc sống của trẻ em vùng cao. Mỗi bữa ăn là một tia hy vọng."),
+                  React.createElement('div', { className: "flex gap-5" }, 
+                    [Facebook, Instagram, Mail].map((Icon, i) => (
+                      React.createElement('a', { key: i, href: "#", className: "w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-brand-orange hover:text-white transition-all border border-white/5" }, React.createElement(Icon, { size: 20 }))
+                    ))
+                  )
+                ),
+                React.createElement('div', null, 
+                  React.createElement('h4', { className: "text-white font-black mb-8 text-xs uppercase tracking-[0.3em]" }, "Khám phá"),
+                  React.createElement('ul', { className: "space-y-5 text-sm font-bold" }, 
+                    NAV_ITEMS.map(item => React.createElement('li', { key: item.id }, React.createElement('button', { onClick: () => handleNav(item.id), className: "hover:text-brand-orange transition-colors" }, item.label)))
+                  )
+                ),
+                React.createElement('div', null, 
+                  React.createElement('h4', { className: "text-white font-black mb-8 text-xs uppercase tracking-[0.3em]" }, "Liên hệ"),
+                  React.createElement('div', { className: "space-y-6" }, 
+                    React.createElement('div', { className: "flex items-center gap-4" }, React.createElement(Mail, { size: 20, className: "text-brand-orange" }), React.createElement('span', { className: "font-bold" }, "lienhe@nuoiemtam.vn")),
+                    React.createElement('div', { className: "flex items-center gap-4" }, React.createElement(Phone, { size: 20, className: "text-brand-orange" }), React.createElement('span', { className: "font-bold" }, "0909 123 456"))
+                  )
+                )
+              ),
+              React.createElement('div', { className: "border-t border-white/5 pt-10 text-center text-[10px] font-bold uppercase tracking-[0.3em]" }, "© 2024 NUÔI EM TÂM - GIEO MẦM HY VỌNG")
+            )
+          ),
+
+          // Modal & Mobile Bottom CTA
+          React.createElement(ProjectDetailModal, { isOpen: modal.open, onClose: () => setModal({ ...modal, open: false }), section: modal.section }),
+          React.createElement('div', { className: "md:hidden fixed bottom-0 left-0 w-full p-4 bg-white/95 backdrop-blur-2xl border-t z-50 shadow-[0_-20px_40px_rgba(0,0,0,0.1)]" }, 
+            React.createElement('button', { 
+              onClick: () => setModal({ open: true, section: 'donate' }), 
+              className: "flex items-center justify-center gap-3 w-full bg-brand-orange text-white py-5 rounded-[24px] font-black text-lg shadow-2xl shadow-orange-500/30 active:scale-95 transition-all" 
+            }, React.createElement(Heart, { size: 24, fill: "currentColor" }), "Ủng hộ 10.000đ ngay")
+          ),
+          React.createElement('div', { className: "md:hidden h-24" })
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(React.createElement(React.StrictMode, null, React.createElement(App)));
+    </script>
+  </body>
+</html>
